@@ -3,7 +3,7 @@
 
 int main() {
   System system;
-  system.setKernelVersion();
-  system.setOSName();
+  // system.setKernelVersion();
+  // system.setOSName();
   NCursesDisplay::Display(system);
 }

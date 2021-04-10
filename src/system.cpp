@@ -14,6 +14,13 @@ using std::size_t;
 using std::string;
 using std::vector;
 
+
+System::System()
+{
+    setOSName();
+    setKernelVersion();
+} 
+
 // TODO: Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
