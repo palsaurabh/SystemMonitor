@@ -38,12 +38,14 @@ void System::setKernelVersion()
 vector<Process>& System::Processes()
 {
     vector<int> pids = LinuxParser::Pids();
+    processes_.clear();
     for(int p : pids)
     {
         Process proc;
         proc.Pid(p);
         proc.setCommand(p);
 
+        processes_.push_back(proc);
     }
     return processes_; 
 }
