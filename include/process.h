@@ -20,9 +20,9 @@ class Process {
   void setUser(int);
   // TODO: Declare any necessary private members
  private:
- int pid_;
- std::string command_;
- std::string user_;
+  int pid_;
+  std::string command_;
+  std::string user_;
 };
 
 #endif
