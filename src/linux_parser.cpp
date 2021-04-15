@@ -109,23 +109,108 @@ long LinuxParser::UpTime()
 }
 
 // TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+long LinuxParser::Jiffies() 
+{
+  std::string line;
+  char *scratchPad;
+  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  long totalJiffies = 0;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+ 
+  if (stream.is_open())
+  {
+    std::getline(stream, line);
+    user = std::strtol(line.c_str(), &scratchPad, 10);
+    nice = std::strtol(scratchPad, &scratchPad, 10);
+    system = std::strtol(scratchPad, &scratchPad, 10);
+    idle = std::strtol(scratchPad, &scratchPad, 10);
+    iowait = std::strtol(scratchPad, &scratchPad, 10);
+    irq = std::strtol(scratchPad, &scratchPad, 10);
+    softirq = std::strtol(scratchPad, &scratchPad, 10);
+    steal = std::strtol(scratchPad, &scratchPad, 10);
+    guest = std::strtol(scratchPad, &scratchPad, 10);
+    guest_nice = std::strtol(scratchPad, &scratchPad, 10);
+
+    totalJiffies = user + nice + system + idle + iowait + irq + steal;
+    // std::istringstream linestream(line);
+    // linestream>>user>>nice>>system>>idle>>iowait>>irq>>softirq>>steal>>guest>>guest_nice;
+  }
+ 
+  return totalJiffies; 
+}
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid) { return 0; }
 
 // TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+long LinuxParser::ActiveJiffies() 
+{
+  std::string line;
+  char *scratchPad;
+  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  long ActiveJiffies = 0;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+ 
+  if (stream.is_open())
+  {
+    std::getline(stream, line);
+    user = std::strtol(line.c_str(), &scratchPad, 10);
+    nice = std::strtol(scratchPad, &scratchPad, 10);
+    system = std::strtol(scratchPad, &scratchPad, 10);
+    idle = std::strtol(scratchPad, &scratchPad, 10);
+    iowait = std::strtol(scratchPad, &scratchPad, 10);
+    irq = std::strtol(scratchPad, &scratchPad, 10);
+    softirq = std::strtol(scratchPad, &scratchPad, 10);
+    steal = std::strtol(scratchPad, &scratchPad, 10);
+    guest = std::strtol(scratchPad, &scratchPad, 10);
+    guest_nice = std::strtol(scratchPad, &scratchPad, 10);
+
+    ActiveJiffies = user + nice + system + irq + softirq + steal;
+  }
+ 
+  return ActiveJiffies; 
+}
 
 // TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+long LinuxParser::IdleJiffies() 
+{ 
+  std::string line;
+  char *scratchPad;
+  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  long idleJiffies = 0;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+ 
+  if (stream.is_open())
+  {
+    std::getline(stream, line);
+    user = std::strtol(line.c_str(), &scratchPad, 10);
+    nice = std::strtol(scratchPad, &scratchPad, 10);
+    system = std::strtol(scratchPad, &scratchPad, 10);
+    idle = std::strtol(scratchPad, &scratchPad, 10);
+    iowait = std::strtol(scratchPad, &scratchPad, 10);
+
+    idleJiffies = idle + iowait;
+    // std::istringstream linestream(line);
+    // linestream>>user>>nice>>system>>idle>>iowait>>irq>>softirq>>steal>>guest>>guest_nice;
+  }
+ 
+  return idleJiffies; 
+  
+}
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() 
+float LinuxParser::CpuUtilization(long currentIdle, long currentActive, long prevIdle, long prevNonIdle) 
 {
+  long prevTotal = prevIdle + prevNonIdle;
+  long total = currentIdle + currentActive;
 
 
+  // # differentiate: actual value minus the previous one
+  long totald = total - prevTotal;
+  long idled = currentIdle - prevIdle;
+
+  return (totald - idled)/totald;
 }
 
 // TODO: Read and return the total number of processes
