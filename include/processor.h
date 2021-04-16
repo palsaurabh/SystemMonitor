@@ -8,12 +8,13 @@ class Processor {
 
  void setIdleJiffies(long jiffies);
  void setActiveJiffies(long jiffies);
- void getIdleJiffies(long jiffies);
- void getActiveJiffies(long jiffies);
+ long getIdleJiffies();
+ long getActiveJiffies();
   // TODO: Declare any necessary private members
  private:
  long idleJiffies;
  long activeJiffies;
+ float CPUUtil_;
 };
 
 #endif

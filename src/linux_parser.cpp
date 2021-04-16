@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include "linux_parser.h"
 
 using std::stof;
@@ -112,28 +113,19 @@ long LinuxParser::UpTime()
 long LinuxParser::Jiffies() 
 {
   std::string line;
-  char *scratchPad;
-  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  std::string scratchPad;
   long totalJiffies = 0;
   std::ifstream stream(kProcDirectory + kStatFilename);
  
   if (stream.is_open())
   {
     std::getline(stream, line);
-    user = std::strtol(line.c_str(), &scratchPad, 10);
-    nice = std::strtol(scratchPad, &scratchPad, 10);
-    system = std::strtol(scratchPad, &scratchPad, 10);
-    idle = std::strtol(scratchPad, &scratchPad, 10);
-    iowait = std::strtol(scratchPad, &scratchPad, 10);
-    irq = std::strtol(scratchPad, &scratchPad, 10);
-    softirq = std::strtol(scratchPad, &scratchPad, 10);
-    steal = std::strtol(scratchPad, &scratchPad, 10);
-    guest = std::strtol(scratchPad, &scratchPad, 10);
-    guest_nice = std::strtol(scratchPad, &scratchPad, 10);
-
-    totalJiffies = user + nice + system + idle + iowait + irq + steal;
-    // std::istringstream linestream(line);
-    // linestream>>user>>nice>>system>>idle>>iowait>>irq>>softirq>>steal>>guest>>guest_nice;
+    std::istringstream linestream(line);
+    for(int state = kUser_; state <= kSteal_; state++)
+    {
+      stream >> scratchPad; 
+      totalJiffies += strtol(scratchPad.c_str(), NULL, 10);
+    }
   }
  
   return totalJiffies; 
@@ -147,26 +139,22 @@ long LinuxParser::ActiveJiffies(int pid) { return 0; }
 long LinuxParser::ActiveJiffies() 
 {
   std::string line;
-  char *scratchPad;
-  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  std::string scratchPad;
   long ActiveJiffies = 0;
   std::ifstream stream(kProcDirectory + kStatFilename);
  
   if (stream.is_open())
   {
     std::getline(stream, line);
-    user = std::strtol(line.c_str(), &scratchPad, 10);
-    nice = std::strtol(scratchPad, &scratchPad, 10);
-    system = std::strtol(scratchPad, &scratchPad, 10);
-    idle = std::strtol(scratchPad, &scratchPad, 10);
-    iowait = std::strtol(scratchPad, &scratchPad, 10);
-    irq = std::strtol(scratchPad, &scratchPad, 10);
-    softirq = std::strtol(scratchPad, &scratchPad, 10);
-    steal = std::strtol(scratchPad, &scratchPad, 10);
-    guest = std::strtol(scratchPad, &scratchPad, 10);
-    guest_nice = std::strtol(scratchPad, &scratchPad, 10);
-
-    ActiveJiffies = user + nice + system + irq + softirq + steal;
+    std::istringstream linestream(line);
+    for(int state = kUser_; state <= kSteal_; state++)
+    {
+      stream >> scratchPad; 
+      if(state != kIdle_ && state != kIOwait_)
+      {
+        ActiveJiffies += strtol(scratchPad.c_str(), NULL, 10);
+      }
+    }
   }
  
   return ActiveJiffies; 
@@ -176,23 +164,22 @@ long LinuxParser::ActiveJiffies()
 long LinuxParser::IdleJiffies() 
 { 
   std::string line;
-  char *scratchPad;
-  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+  std::string scratchPad;
   long idleJiffies = 0;
   std::ifstream stream(kProcDirectory + kStatFilename);
  
   if (stream.is_open())
   {
     std::getline(stream, line);
-    user = std::strtol(line.c_str(), &scratchPad, 10);
-    nice = std::strtol(scratchPad, &scratchPad, 10);
-    system = std::strtol(scratchPad, &scratchPad, 10);
-    idle = std::strtol(scratchPad, &scratchPad, 10);
-    iowait = std::strtol(scratchPad, &scratchPad, 10);
-
-    idleJiffies = idle + iowait;
-    // std::istringstream linestream(line);
-    // linestream>>user>>nice>>system>>idle>>iowait>>irq>>softirq>>steal>>guest>>guest_nice;
+    std::istringstream linestream(line);
+    for(int state = kUser_; state <= kGuestNice_; state++)
+    {
+      stream >> scratchPad; 
+      if(state >= kIdle_ && state <= kIOwait_)
+      {
+        idleJiffies += strtol(scratchPad.c_str(), NULL, 10);
+      }
+    }
   }
  
   return idleJiffies; 
@@ -210,7 +197,12 @@ float LinuxParser::CpuUtilization(long currentIdle, long currentActive, long pre
   long totald = total - prevTotal;
   long idled = currentIdle - prevIdle;
 
-  return (totald - idled)/totald;
+  if(totald > 0)
+  {
+    return (float)((float)totald - idled)/totald;
+  }
+  else 
+    return -1.0;
 }
 
 // TODO: Read and return the total number of processes
@@ -343,17 +335,71 @@ long LinuxParser::UpTime(int pid)
 {
   std::string line;
   std::string temp;
+  long uptime;
   std::ifstream processStatusFile(kProcDirectory + to_string(pid) + kStatFilename);
   if (processStatusFile.is_open()) 
   {
     std::getline(processStatusFile, line);
     std::istringstream stream(line);
     int count = 0;
-    while(count < 22 && stream >> temp)
+    while(count < STARTTIME && stream >> temp)
     {
       count++;
     }
   }
-  return std::strtol(temp.c_str(), NULL, 10);
+
+  uptime = LinuxParser::UpTime() - (std::strtol(temp.c_str(), NULL, 10))/ sysconf(_SC_CLK_TCK);
+
+  return uptime;
+}
+
+float LinuxParser::processCPUutilisation(int pid)
+{
+  std::string line;
+  std::string temp;
+  long utime, stime, cutime, cstime;
+  std::ofstream log("./log.txt", std::ios::out|std::ios::app);
+  std::ifstream processStatusFile(kProcDirectory + to_string(pid) + kStatFilename);
+  log << "PID: "<< pid <<'\n';
+  if (processStatusFile.is_open()) 
+  {
+    std::getline(processStatusFile, line);
+    std::istringstream stream(line);
+    int count = 0;
+    while(count < CSTIME && stream >> temp)
+    {
+      count++;
+      if(count == UTIME)
+      {
+        utime = strtol(temp.c_str(), NULL, 10);
+        log << "utime:" << utime <<'\n';
+      }
+      else if(count == STIME)
+      {
+        stime = strtol(temp.c_str(), NULL, 10);
+        log << "stime:" << stime <<'\n';
+      }
+      else  if(count == CUTIME)
+      {
+        cutime = strtol(temp.c_str(), NULL, 10);
+        log << "cutime:" << cutime <<'\n';
+      }
+      else  if(count == CSTIME)
+      {
+        cstime = strtol(temp.c_str(), NULL, 10);
+        log << "cstime:" << cstime <<'\n';
+      }
+    }
+  }
+
+  long totaltime = utime + stime + cstime + cutime;
+  long time = LinuxParser::UpTime(pid);
+  log<< "Uptime : " << time << '\n';
+  float cpuUsage = (totaltime/sysconf(_SC_CLK_TCK))/time;
+  log<< "cpuUsage : " << cpuUsage << '\n';
+  log<<"Process : "<< pid << "totaltime: "<<totaltime<<'\n';
+  log.close();
+  return cpuUsage;
 
 }
+

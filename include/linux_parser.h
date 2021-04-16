@@ -5,6 +5,12 @@
 #include <regex>
 #include <string>
 
+#define UTIME 14
+#define STIME 15
+#define CUTIME 16
+#define CSTIME 17
+#define STARTTIME 22
+
 namespace LinuxParser {
 // Paths
 const std::string kProcDirectory{"/proc/"};
@@ -41,7 +47,7 @@ enum CPUStates {
   kGuestNice_
 };
 // std::vector<std::string> CpuUtilization();
-float LinuxParser::CpuUtilization(long currentIdle, long currentActive, long prevIdle, long prevNonIdle) ;
+float CpuUtilization(long currentIdle, long currentActive, long prevIdle, long prevNonIdle) ;
 long Jiffies();
 long ActiveJiffies();
 long ActiveJiffies(int pid);
@@ -53,6 +59,7 @@ std::string Ram(int pid);
 std::string Uid(int pid);
 std::string User(int pid);
 long int UpTime(int pid);
+float processCPUutilisation(int pid);
 };  // namespace LinuxParser
 
 #endif
