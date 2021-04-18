@@ -9,6 +9,7 @@
 #include "system.h"
 #include "linux_parser.h"
 #include <iostream>
+#include <fstream>
 using std::set;
 using std::size_t;
 using std::string;
@@ -37,17 +38,28 @@ void System::setKernelVersion()
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes()
 {
+    std::ofstream log("./Log2.txt", std::ios::out|std::ios::app);
     vector<int> pids = LinuxParser::Pids();
     processes_.clear();
     for(int p : pids)
     {
         Process proc;
+        log<<"PID:"<<p<<"Here1\n";
         proc.Pid(p);
         proc.setCommand(p);
         proc.setUser(p);
+        proc.setCpuUtilization(); 
+        log<<"PID:"<<p<<"Here2\n";
+
+        proc.setRam();
+        proc.setUpTime();
+
 
         processes_.push_back(proc);
     }
+    log<<"Here\n";
+    log.close();
+    std::sort(processes_.begin(), processes_.end());
     return processes_; 
 }
 

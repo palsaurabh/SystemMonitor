@@ -11,6 +11,7 @@ using std::string;
 using std::to_string;
 using std::vector;
 
+extern std::ofstream Log;
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem() {
   string line;
@@ -275,10 +276,11 @@ string LinuxParser::Ram(int pid)
     }
   }
 
-  // return value;
-  // std::cout<<"2nd stoi"<<'\n';
-
-  return to_string((stoi(value)/1024)/1024);
+  std::string result = to_string((stoi(value)/1024));
+  Log<<"PID: "<<pid<<"Ram(KB):"<<value<<'\n';
+  Log<<"PID: "<<pid<<"Ram(MB):" << result<<'\n';
+  return result;
+  // return to_string((stoi(value)/1024));
 }
 
 // TODO: Read and return the user ID associated with a process
@@ -325,7 +327,7 @@ string LinuxParser::User(int pid)
       }
     }
   }
-
+  Log<<"Usename: "<<key<<'\n';
   return key; 
 }
 
@@ -358,9 +360,8 @@ float LinuxParser::processCPUutilisation(int pid)
   std::string line;
   std::string temp;
   long utime, stime, cutime, cstime;
-  std::ofstream log("./log.txt", std::ios::out|std::ios::app);
   std::ifstream processStatusFile(kProcDirectory + to_string(pid) + kStatFilename);
-  log << "PID: "<< pid <<'\n';
+  Log << "PID: "<< pid <<'\n';
   if (processStatusFile.is_open()) 
   {
     std::getline(processStatusFile, line);
@@ -372,33 +373,38 @@ float LinuxParser::processCPUutilisation(int pid)
       if(count == UTIME)
       {
         utime = strtol(temp.c_str(), NULL, 10);
-        log << "utime:" << utime <<'\n';
+        // Log << "utime:" << utime <<'\n';
       }
       else if(count == STIME)
       {
         stime = strtol(temp.c_str(), NULL, 10);
-        log << "stime:" << stime <<'\n';
+        // Log << "stime:" << stime <<'\n';
       }
       else  if(count == CUTIME)
       {
         cutime = strtol(temp.c_str(), NULL, 10);
-        log << "cutime:" << cutime <<'\n';
+        // Log << "cutime:" << cutime <<'\n';
       }
       else  if(count == CSTIME)
       {
         cstime = strtol(temp.c_str(), NULL, 10);
-        log << "cstime:" << cstime <<'\n';
+        // Log << "cstime:" << cstime <<'\n';
       }
     }
   }
 
   long totaltime = utime + stime + cstime + cutime;
+  Log<<"Process : "<< pid << "totaltime: "<<totaltime<<'\n';
+  Log<<"Hz: "<< sysconf(_SC_CLK_TCK)<<'\n';
   long time = LinuxParser::UpTime(pid);
-  log<< "Uptime : " << time << '\n';
-  float cpuUsage = (totaltime/sysconf(_SC_CLK_TCK))/time;
-  log<< "cpuUsage : " << cpuUsage << '\n';
-  log<<"Process : "<< pid << "totaltime: "<<totaltime<<'\n';
-  log.close();
+  Log<< "Uptime : " << time << '\n';
+  float cpuUsage;
+  if(time != 0)
+  {
+    cpuUsage = ((float)totaltime/sysconf(_SC_CLK_TCK))/time;
+  }
+  else cpuUsage = 0;
+  Log<< "cpuUsage : " << cpuUsage << '\n';
   return cpuUsage;
 
 }
