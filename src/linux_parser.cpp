@@ -351,6 +351,7 @@ long LinuxParser::UpTime(int pid)
 
 float LinuxParser::processCPUutilisation(int pid)
 {
+
   std::string line;
   std::string temp;
   long utime, stime, cutime, cstime;
@@ -382,6 +383,7 @@ float LinuxParser::processCPUutilisation(int pid)
     }
   }
 
+// Inspired from :https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
   long totaltime = utime + stime + cstime + cutime;
   long time = LinuxParser::UpTime(pid);
   float cpuUsage;
