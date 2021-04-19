@@ -36,14 +36,12 @@ string Process::Command() { return command_; }
 
 void Process::setCommand(int pid)
 {
-    command_.clear();
     command_ = LinuxParser::Command(pid);
 }
 // TODO: Return this process's memory utilization
 string Process::Ram() { return Ram_; }
 void Process::setRam() 
 {
-    Ram_.clear() ;
     Ram_ = LinuxParser::Ram(pid_); 
 }
 
@@ -51,7 +49,6 @@ void Process::setRam()
 string Process::User() { return user_; }
 void Process::setUser(int pid)
 {
-    user_.clear();
     user_ = LinuxParser::User(pid);
 }
 // TODO: Return the age of this process (in seconds)

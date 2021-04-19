@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <fstream>
 #include "linux_parser.h"
 
 using std::stof;
@@ -11,12 +10,11 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-extern std::ofstream Log;
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem() {
   string line;
   string key;
-  string value;
+  string value{"NA"};
   std::ifstream filestream(kOSPath);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -37,7 +35,7 @@ string LinuxParser::OperatingSystem() {
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::Kernel() {
-  string os, version, kernel;
+  string os, version, kernel{"NA"};
   string line;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
@@ -97,7 +95,7 @@ float LinuxParser::MemoryUtilization()
 long LinuxParser::UpTime() 
 { 
   std::string line;
-  long sysUpTimeSecs;
+  long sysUpTimeSecs{0};
   std::ifstream uptimefile(kProcDirectory + kUptimeFilename);
   if(uptimefile.is_open())
   {
@@ -134,7 +132,7 @@ long LinuxParser::Jiffies()
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid) { return 0; }
+// long LinuxParser::ActiveJiffies(int pid) { return 0; }
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() 
@@ -190,6 +188,8 @@ long LinuxParser::IdleJiffies()
 // TODO: Read and return CPU utilization
 float LinuxParser::CpuUtilization(long currentIdle, long currentActive, long prevIdle, long prevNonIdle) 
 {
+//Help taken from
+//https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
   long prevTotal = prevIdle + prevNonIdle;
   long total = currentIdle + currentActive;
 
@@ -276,9 +276,7 @@ string LinuxParser::Ram(int pid)
     }
   }
 
-  std::string result = to_string((stoi(value)/1024));
-  return result;
-  // return to_string((stoi(value)/1024));
+  return to_string((stoi(value)/1024));
 }
 
 // TODO: Read and return the user ID associated with a process
@@ -299,8 +297,6 @@ string LinuxParser::Uid(int pid)
   }
 
   return value;
-  // return to_string((stoi(value)/1024)/1024);
-
 }
 
 // TODO: Read and return the user associated with a process
@@ -308,7 +304,7 @@ string LinuxParser::Uid(int pid)
 string LinuxParser::User(int pid) 
 {
   std::string line;
-  std::string key;
+  std::string key{"NA"};
   std::string value;
   std::string x;
   std::string uid = LinuxParser::Uid(pid);
@@ -394,7 +390,7 @@ float LinuxParser::processCPUutilisation(int pid)
     cpuUsage = ((float)totaltime/sysconf(_SC_CLK_TCK))/time;
   }
   else cpuUsage = 0;
-  return cpuUsage;
 
+  return cpuUsage;
 }
 
